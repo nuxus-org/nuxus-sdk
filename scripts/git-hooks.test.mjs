@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import {
+  chmodSync,
   copyFileSync,
   mkdirSync,
   mkdtempSync,
@@ -74,6 +75,8 @@ function fixture(t) {
     '.husky/install.mjs',
     '.husky/pre-commit',
     '.husky/pre-push',
+    '.gitleaks-version',
+    'scripts/check-secrets.mjs',
   ]) {
     mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
     copyFileSync(path.join(repository, file), path.join(root, file));
@@ -91,6 +94,8 @@ function fixture(t) {
         scripts: {
           prepare: manifest.scripts.prepare,
           'check:staged': manifest.scripts['check:staged'],
+          'check:secrets': manifest.scripts['check:secrets'],
+          'check:secrets:staged': manifest.scripts['check:secrets:staged'],
           'check-types': manifest.scripts['check-types'],
         },
         'lint-staged': manifest['lint-staged'],
@@ -218,6 +223,93 @@ test('pre-commit rejects formatted code with a lint error', (t) => {
   assert.notEqual(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout + result.stderr, /no-undef/);
   assert.equal(f.git('rev-parse', 'HEAD'), f.base);
+});
+
+function secretFixture() {
+  return (
+    'ghp_' +
+    Array.from('0123456789abcdefghijklmnopqrstuvwxyz').reverse().join('')
+  );
+}
+
+test('pre-commit scans the index and blocks a secret absent from the working tree', (t) => {
+  const f = fixture(t);
+  const secret = secretFixture();
+  const file = 'credentials.txt';
+  f.write(file, `${secret}\n`);
+  f.git('add', file);
+  f.write(file, 'safe working copy\n');
+  const result = command(f.root, 'git', ['commit', '-m', 'must reject secret']);
+  const output = result.stdout + result.stderr;
+  assert.notEqual(result.status, 0, output);
+  assert.match(output, /github-pat/);
+  assert.match(output, /REDACTED/);
+  assert.ok(!output.includes(secret));
+  assert.equal(f.git('rev-parse', 'HEAD'), f.base);
+  assert.equal(f.git('show', `:${file}`), secret);
+  assert.equal(
+    readFileSync(path.join(f.root, file), 'utf8'),
+    'safe working copy\n',
+  );
+});
+
+test('pre-commit permits a safe stage while preserving an unstaged secret', (t) => {
+  const f = fixture(t);
+  const file = 'scripts/sample.mjs';
+  f.write(file, 'export const value = 2;\n');
+  f.git('add', file);
+  const unstaged = `export const value = '${secretFixture()}';\n`;
+  f.write(file, unstaged);
+  f.git('commit', '-qm', 'safe staged content');
+  assert.equal(f.git('show', `HEAD:${file}`), 'export const value = 2;');
+  assert.equal(readFileSync(path.join(f.root, file), 'utf8'), unstaged);
+});
+
+test('history scan finds a removed secret and redacts the result', (t) => {
+  const f = fixture(t);
+  const secret = secretFixture();
+  f.write('credentials.txt', `${secret}\n`);
+  f.git('add', '.');
+  f.git(
+    '-c',
+    'core.hooksPath=.no-hooks',
+    'commit',
+    '-qm',
+    'historical secret fixture',
+  );
+  f.write('credentials.txt', 'safe content\n');
+  f.git('add', '.');
+  f.git('commit', '-qm', 'remove historical secret');
+  const result = command(f.root, 'pnpm', ['run', 'check:secrets']);
+  const output = result.stdout + result.stderr;
+  assert.notEqual(result.status, 0, output);
+  assert.match(output, /github-pat/);
+  assert.match(output, /REDACTED/);
+  assert.ok(!output.includes(secret));
+});
+
+test('secret checks fail when the CLI is missing or the version is wrong', (t) => {
+  const f = fixture(t);
+  const bin = path.join(f.root, 'bin');
+  mkdirSync(bin);
+  const missing = command(
+    f.root,
+    process.execPath,
+    ['scripts/check-secrets.mjs', 'staged'],
+    { PATH: bin },
+  );
+  assert.notEqual(missing.status, 0);
+  assert.match(missing.stderr, /Install the CLI/);
+  f.write('bin/gitleaks', "#!/bin/sh\nprintf '0.0.0\\n'\n");
+  chmodSync(path.join(bin, 'gitleaks'), 0o755);
+  const mismatch = command(
+    f.root,
+    process.execPath,
+    ['scripts/check-secrets.mjs', 'staged'],
+    { PATH: bin },
+  );
+  assert.notEqual(mismatch.status, 0);
+  assert.match(mismatch.stderr, /as pinned in .gitleaks-version/);
 });
 
 test('pre-push checks both SDKs and permits a push after type errors are fixed', (t) => {

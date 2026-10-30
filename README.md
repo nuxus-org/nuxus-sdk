@@ -23,16 +23,23 @@ integrations are not required by these clients.
 
 ## Development
 
-Use Linux/WSL, Node.js `24.10.0`, and pnpm `11.22.0`.
+Use Linux/WSL, Node.js `24.10.0`, pnpm `11.22.0`, and Gitleaks `8.30.1`.
+The CLI version is pinned in `.gitleaks-version`; local hooks and CI should use
+that version. Download the matching binary from the
+[official release](https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1),
+verify its SHA-256 against the release checksums, and place it on `PATH`.
+Gitleaks is a development tool; published SDKs do not require it.
 
 ```sh
 nvm use
 pnpm install --frozen-lockfile
+gitleaks version
 pnpm build
 pnpm check-types
 pnpm lint
 pnpm test
 pnpm format:check
+pnpm check:secrets
 ```
 
 `pnpm dev` watches both SDKs and rebuilds their output. Build before using a
@@ -43,15 +50,22 @@ Git hooks install automatically during a development `pnpm install`. Run
 `pnpm hooks:install` to reinstall them. Hook installation is skipped in CI,
 production, when `HUSKY=0`, or when Git metadata is absent.
 
-- `pre-commit` checks staged files with Prettier and ESLint. It does not fix files
-  automatically, and preserves unstaged edits. Type-test files remain covered by
-  the type checker; generated lockfile formatting is preserved.
+- `pre-commit` scans the staged diff with Gitleaks before running Prettier and
+  ESLint. Missing or mismatched CLI versions block the commit. Checks do not fix
+  files automatically, and preserve unstaged edits. Type-test files remain covered
+  by the type checker; generated lockfile formatting is preserved.
 - `pre-push` runs `pnpm check-types` for both SDKs.
 - `pnpm test:tooling` tests the hooks in temporary Git repositories, including
   local-only pushes. `pnpm test` includes these checks before SDK runtime tests.
 
 Root `pnpm lint` also checks the hook installer and tooling tests. Full builds,
 runtime tests, and distribution checks are run separately from Git hooks.
+
+`pnpm check:secrets:staged` scans staged changes; `pnpm check:secrets` scans Git
+history across all local refs, including secrets removed in later commits. Both
+redact findings and return a nonzero exit code on findings or scanner errors.
+Pre-commit checks do not scan unstaged or untracked files. Tooling tests require
+the pinned CLI and use synthetic credentials in temporary repositories.
 
 Contributor guide: [SDK architecture](docs/architecture.md).
 
