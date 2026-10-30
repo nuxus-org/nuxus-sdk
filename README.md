@@ -10,6 +10,9 @@ The TypeScript engine and data SDKs have been migrated from `nuxus-core`.
 Both packages start at `0.1.0-alpha.1` and use the `alpha` distribution tag.
 They are being prepared for their first registry publication.
 
+Prepared release notes and package changelogs are listed in
+[Release notes](docs/releases/README.md).
+
 ## Repository layout
 
 ```text
@@ -93,7 +96,7 @@ pnpm check:packages /tmp/nuxus-sdk-packages --check-types
 ```
 
 Each archive contains compiled ESM, TypeScript declarations, its README, usage documentation, license,
-and package metadata. Publishing is a separate step.
+changelog, and package metadata. Publishing is a separate step.
 
 ## Continuous integration
 

@@ -54,13 +54,14 @@ function validateArchive(name) {
     assert.ok(!file.split('/').includes('..'), `Invalid archive path: ${file}`);
     assert.match(
       file,
-      /^package\/(?:dist\/.+\.(?:js|d\.ts)|docs\/.+\.md|README\.md|LICENSE|package\.json)$/,
+      /^package\/(?:dist\/.+\.(?:js|d\.ts)|docs\/.+\.md|README\.md|CHANGELOG\.md|LICENSE|package\.json)$/,
     );
   }
   for (const file of [
     'package.json',
     'LICENSE',
     'README.md',
+    'CHANGELOG.md',
     'docs/usage.md',
     'dist/index.js',
     'dist/index.d.ts',

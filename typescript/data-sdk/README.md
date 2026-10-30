@@ -7,6 +7,8 @@ Node.js 22+ with native WebSocket and fetch, or injected transports.
 The initial release version is **0.1.0-alpha.1**, under the `alpha` distribution
 tag. The package is being prepared for publication.
 
+See the [changelog](CHANGELOG.md) for the initial alpha scope.
+
 ## Installation
 
 After publication:
