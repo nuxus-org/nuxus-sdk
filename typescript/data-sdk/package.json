@@ -1,0 +1,57 @@
+{
+  "name": "@nuxus/data-sdk",
+  "version": "0.1.0-alpha.1",
+  "type": "module",
+  "description": "Framework-independent authenticated HTTP and WebSocket clients for Nuxus data",
+  "license": "MIT",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "docs",
+    "LICENSE"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      }
+    },
+    "tag": "alpha"
+  },
+  "scripts": {
+    "build": "node --input-type=module -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true });\" && tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "check-types": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+    "lint": "eslint . --max-warnings=0",
+    "test": "pnpm run build && node --test tests/*.test.mjs",
+    "prepack": "pnpm run build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "6.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nuxus-org/nuxus-sdk.git",
+    "directory": "typescript/data-sdk"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
