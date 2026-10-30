@@ -116,7 +116,8 @@ installing repository development dependencies. No private core checkout or
 service credentials are needed.
 
 Verified archives are available as the `sdk-packages` workflow artifact for seven
-days. npm publishing belongs to a separate release workflow.
+days. The separate [SDK Release workflow](.github/workflows/release.yml) runs on
+package tags and publishes only the selected SDK using npm Trusted Publishing.
 
 ## Scope
 
