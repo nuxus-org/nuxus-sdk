@@ -371,10 +371,30 @@ test('post-publication verification rejects changed integrity and a wrong dist-t
   }
 });
 
-test('registry visibility retries are bounded and never repeat npm publish', async (t) => {
+test('publication waits for registry processing longer than ten seconds without republishing', async (t) => {
+  const setup = publicationFixture(t);
+  let elapsed = 0;
+  let lookups = 0;
+  await publish(setup.resolved, setup.directory, {
+    run: setup.run,
+    lookup: async () => {
+      lookups++;
+      return elapsed >= 30_000 ? setup.published : setup.registered;
+    },
+    now: () => elapsed,
+    pause: async (milliseconds) => {
+      elapsed += milliseconds;
+    },
+  });
+  assert.equal(elapsed, 30_000);
+  assert.ok(lookups > 2);
+  assert.equal(setup.writes.length, 1);
+});
+
+test('registry visibility retries stop after five minutes without repeating npm publish', async (t) => {
   const setup = publicationFixture(t);
   let lookups = 0;
-  let pauses = 0;
+  let elapsed = 0;
   await assert.rejects(
     publish(setup.resolved, setup.directory, {
       run: setup.run,
@@ -383,14 +403,37 @@ test('registry visibility retries are bounded and never repeat npm publish', asy
         return setup.registered;
       },
       pause: async (milliseconds) => {
-        assert.equal(milliseconds, 2_000);
-        pauses++;
+        assert.ok(milliseconds > 0 && milliseconds <= 10_000);
+        elapsed += milliseconds;
+      },
+      now: () => elapsed,
+    }),
+    /verification timed out/,
+  );
+  assert.ok(lookups > 1);
+  assert.equal(elapsed, 5 * 60_000);
+  assert.equal(setup.writes.length, 1);
+});
+
+test('slow registry responses count toward the publication verification deadline', async (t) => {
+  const setup = publicationFixture(t);
+  let elapsed = 0;
+  let lookups = 0;
+  await assert.rejects(
+    publish(setup.resolved, setup.directory, {
+      run: setup.run,
+      lookup: async () => {
+        if (lookups++ > 0) elapsed += 80_000;
+        return setup.registered;
+      },
+      now: () => elapsed,
+      pause: async (milliseconds) => {
+        elapsed += milliseconds;
       },
     }),
     /verification timed out/,
   );
-  assert.equal(lookups, 7);
-  assert.equal(pauses, 5);
+  assert.ok(elapsed >= 5 * 60_000 && elapsed < 5 * 60_000 + 80_000);
   assert.equal(setup.writes.length, 1);
 });
 

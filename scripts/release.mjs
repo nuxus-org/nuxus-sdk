@@ -181,7 +181,12 @@ function prepare(release) {
 export async function publish(
   release,
   directory,
-  { run = execFileSync, lookup = readRegistry, pause = delay } = {},
+  {
+    run = execFileSync,
+    lookup = readRegistry,
+    pause = delay,
+    now = Date.now,
+  } = {},
 ) {
   assert.ok(directory, 'An archive directory is required.');
   const npmVersion = run('npm', ['--version'], {
@@ -229,7 +234,9 @@ export async function publish(
     ],
     { stdio: 'inherit', timeout: 120_000 },
   );
-  for (let attempt = 0; attempt < 6; attempt++) {
+  const deadline = now() + 5 * 60_000;
+  console.log('Waiting up to 5 minutes for npm to process the publication.');
+  while (now() < deadline) {
     const published = await lookup(release.name);
     if (published?.versions?.[release.version]) {
       assert.equal(
@@ -246,10 +253,12 @@ export async function publish(
       );
       return;
     }
-    if (attempt < 5) await pause(2_000);
+    const remaining = deadline - now();
+    if (remaining <= 0) break;
+    await pause(Math.min(10_000, remaining));
   }
   throw new Error(
-    'npm publish completed but registry verification timed out. Rerun this workflow to check the existing version.',
+    'npm accepted the publication but registry verification timed out after 5 minutes. Rerun failed jobs to verify the existing version.',
   );
 }
 
