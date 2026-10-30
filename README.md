@@ -8,9 +8,9 @@ tests, and releases. Wallet providers such as Turnkey will be optional.
 
 The TypeScript engine and data SDKs have been migrated from `nuxus-core`.
 Both packages start at `0.1.0-alpha.1` and use the `alpha` distribution tag.
-They are being prepared for their first registry publication.
+Both packages are available on npm and can be installed independently.
 
-Prepared release notes and package changelogs are listed in
+Published release notes and package changelogs are listed in
 [Release notes](docs/releases/README.md).
 
 ## Repository layout

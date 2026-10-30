@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0-alpha.1 — Unreleased
+## 0.1.0-alpha.1 — 2026-10-30
 
 Initial public alpha of `@nuxus/data-sdk`.
 
