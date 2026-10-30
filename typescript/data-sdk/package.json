@@ -1,6 +1,6 @@
 {
   "name": "@nuxus/data-sdk",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "type": "module",
   "description": "Framework-independent authenticated HTTP and WebSocket clients for Nuxus data",
   "license": "MIT",

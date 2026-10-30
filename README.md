@@ -7,8 +7,8 @@ SDKs will be organized by language, with independent packages, examples,
 tests, and releases. Wallet providers such as Turnkey will be optional.
 
 The TypeScript engine and data SDKs have been migrated from `nuxus-core`.
-Both packages start at `0.1.0-alpha.1` and use the `alpha` distribution tag.
-Both packages are available on npm and can be installed independently.
+Both packages are available on npm under the `alpha` distribution tag and can be
+installed independently.
 
 Published release notes and package changelogs are listed in
 [Release notes](docs/releases/README.md).

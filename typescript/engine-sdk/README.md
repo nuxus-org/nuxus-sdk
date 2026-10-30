@@ -5,14 +5,11 @@ broadcasting, and signature tracking. Framework independent, ESM, and zero
 runtime dependencies. Supports browsers and Node.js 22+ with native WebSocket
 and fetch, or injected transports.
 
-The initial release version is **0.1.0-alpha.1**, under the `alpha` distribution
-tag. The package is being prepared for publication.
+Prerelease versions are available on npm under the `alpha` distribution tag.
 
-See the [changelog](CHANGELOG.md) for the initial alpha scope.
+See the [changelog](CHANGELOG.md) for release history.
 
 ## Installation
-
-After publication:
 
 ```sh
 npm install @nuxus/engine-sdk@alpha

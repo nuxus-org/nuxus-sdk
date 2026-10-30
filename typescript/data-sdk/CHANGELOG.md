@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0-alpha.2 — 2026-10-31
+
+### Release
+
+- Publish through GitHub Actions using npm Trusted Publishing (OIDC) and provenance
+  to validate this package's initial trusted publisher configuration.
+- Update package documentation for published SDK installation and include the
+  finalized alpha.1 release date.
+
+The SDK runtime and public API are unchanged from `0.1.0-alpha.1`.
+
 ## 0.1.0-alpha.1 — 2026-10-30
 
 Initial public alpha of `@nuxus/data-sdk`.

@@ -1,6 +1,6 @@
 {
   "name": "@nuxus/engine-sdk",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "type": "module",
   "description": "Framework-independent TypeScript clients for the Nuxus HTTP and WebSocket engine",
   "license": "MIT",
