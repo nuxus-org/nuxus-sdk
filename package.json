@@ -13,6 +13,7 @@
     "check:staged": "lint-staged --config package.json --hide-all --concurrent false",
     "check:secrets": "node scripts/check-secrets.mjs history",
     "check:secrets:staged": "node scripts/check-secrets.mjs staged",
+    "check:packages": "node scripts/check-packages.mjs",
     "build": "pnpm -r --stream run build",
     "dev": "pnpm -r --parallel run dev",
     "check-types": "pnpm -r --stream run check-types",

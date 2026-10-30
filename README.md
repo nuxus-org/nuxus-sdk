@@ -30,6 +30,15 @@ that version. Download the matching binary from the
 verify its SHA-256 against the release checksums, and place it on `PATH`.
 Gitleaks is a development tool; published SDKs do not require it.
 
+On Linux x64, the checksum-verified installer can place the CLI in a directory
+of your choice:
+
+```sh
+bash scripts/install-gitleaks.sh ~/.local/bin
+```
+
+Ensure that directory is on `PATH` before running hooks or tooling tests.
+
 ```sh
 nvm use
 pnpm install --frozen-lockfile
@@ -77,12 +86,34 @@ Package documentation:
 To inspect a distribution archive without publishing:
 
 ```sh
-pnpm --filter @nuxus/engine-sdk pack --out /tmp/nuxus-engine-sdk.tgz
-pnpm --filter @nuxus/data-sdk pack --out /tmp/nuxus-data-sdk.tgz
+mkdir -p /tmp/nuxus-sdk-packages
+pnpm --filter @nuxus/engine-sdk pack --out /tmp/nuxus-sdk-packages/engine-sdk.tgz
+pnpm --filter @nuxus/data-sdk pack --out /tmp/nuxus-sdk-packages/data-sdk.tgz
+pnpm check:packages /tmp/nuxus-sdk-packages --check-types
 ```
 
 Each archive contains compiled ESM, TypeScript declarations, its README, usage documentation, license,
 and package metadata. Publishing is a separate step.
+
+## Continuous integration
+
+[SDK CI](.github/workflows/ci.yml) runs on pull requests targeting `main`, pushes
+to `main`, and manual dispatches. It uses the Node version in `.nvmrc`, pnpm from
+`packageManager`, and the checksum-verified CLI version in `.gitleaks-version`.
+
+The validation job scans Git history, installs the frozen lockfile, and runs
+format, lint, public type, hook, and SDK runtime checks. Package prepack scripts
+build clean output. The resulting archives are checked for compiled exports,
+declarations, license/docs, and unexpected files or runtime dependencies.
+
+An isolated npm consumer installs only those two archives offline, with lifecycle
+scripts disabled. Mock HTTP/WebSocket tests and declaration checks exercise the
+installed packages. A second job repeats runtime checks on Node.js 22 without
+installing repository development dependencies. No private core checkout or
+service credentials are needed.
+
+Verified archives are available as the `sdk-packages` workflow artifact for seven
+days. npm publishing belongs to a separate release workflow.
 
 ## Scope
 
