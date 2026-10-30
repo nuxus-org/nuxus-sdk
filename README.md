@@ -39,6 +39,20 @@ pnpm format:check
 locally linked SDK in another repository. Tests use mock transports and do not
 need a running API, engine, data service, or private core checkout.
 
+Git hooks install automatically during a development `pnpm install`. Run
+`pnpm hooks:install` to reinstall them. Hook installation is skipped in CI,
+production, when `HUSKY=0`, or when Git metadata is absent.
+
+- `pre-commit` checks staged files with Prettier and ESLint. It does not fix files
+  automatically, and preserves unstaged edits. Type-test files remain covered by
+  the type checker; generated lockfile formatting is preserved.
+- `pre-push` runs `pnpm check-types` for both SDKs.
+- `pnpm test:tooling` tests the hooks in temporary Git repositories, including
+  local-only pushes. `pnpm test` includes these checks before SDK runtime tests.
+
+Root `pnpm lint` also checks the hook installer and tooling tests. Full builds,
+runtime tests, and distribution checks are run separately from Git hooks.
+
 Contributor guide: [SDK architecture](docs/architecture.md).
 
 Package documentation:

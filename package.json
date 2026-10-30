@@ -8,20 +8,33 @@
     "node": "24.x"
   },
   "scripts": {
+    "prepare": "node -e \"if(require('node:fs').existsSync('.git'))import('./.husky/install.mjs')\"",
+    "hooks:install": "node .husky/install.mjs",
+    "check:staged": "lint-staged --config package.json --hide-all --concurrent false",
     "build": "pnpm -r --stream run build",
     "dev": "pnpm -r --parallel run dev",
     "check-types": "pnpm -r --stream run check-types",
-    "lint": "pnpm -r --stream run lint",
-    "test": "pnpm -r --stream run test",
+    "lint": "eslint . --max-warnings=0",
+    "test": "pnpm run test:tooling && pnpm -r --stream run test",
+    "test:tooling": "node --test scripts/*.test.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
+  "lint-staged": {
+    "*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}": [
+      "prettier --check --ignore-unknown --",
+      "eslint --max-warnings=0 --no-warn-ignored --"
+    ],
+    "*.{json,md,mdx,yml,yaml,css,scss,html}": "prettier --check --ignore-unknown --"
+  },
   "devDependencies": {
-    "prettier": "3.9.6",
     "@eslint/js": "^10.0.1",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.11.0",
+    "husky": "9.1.7",
+    "lint-staged": "17.6.0",
+    "prettier": "3.9.6",
     "typescript-eslint": "^8.67.0"
   }
 }
