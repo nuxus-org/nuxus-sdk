@@ -82,6 +82,7 @@ export class EngineHttpClient {
     if (
       ![
         'engine.ping',
+        'solana.meteora.dbc.getConfig',
         'solana.pump.getLaunchOptions',
         'solana.pump.getTokenSettings',
         'solana.pump.getCharityConfig',

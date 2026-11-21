@@ -35,6 +35,7 @@ export interface EngineHttpClientOptions {
 
 export type EngineQueryMethod =
   | 'engine.ping'
+  | 'solana.meteora.dbc.getConfig'
   | 'solana.pump.getLaunchOptions'
   | 'solana.pump.getTokenSettings'
   | 'solana.pump.getCharityConfig';

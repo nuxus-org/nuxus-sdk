@@ -270,6 +270,14 @@ plus optional creator buy, accepts inline `metadata: { name, symbol, image, webs
 (`image_url` can replace `image`), or published `metadata: { name, symbol, uri }`,
 and returns unsigned bytes with a detached mint signature. Use
 `client.solana.pump.createToken(options)` without `platform` to call Pump directly.
+Use `platform: 'raydium'` for a standard SOL-paired Raydium LaunchLab token.
+The mainnet `otc` and `paid` selectors use SOL-paired Pump creation with fixed
+creator-fee recipients. Supply `otc: { rewardMint, rewardSymbol }` for OTC or
+`paid: { recipient: 'x_handle' }` with inline metadata for UsePaid. OTC clients
+register the resulting mint, metadata URI, reward and creation signature with
+the [OTC registry](https://otcdesks.cash/docs) after execution. UsePaid indexes
+the fee split and the X recipient in the metadata published by the engine.
+
 Inline fields are queued by the engine through its private API connection;
 clients never call a metadata write endpoint or receive backend credentials.
 The API returns the reserved URI before its background R2 upload completes, so a
@@ -324,3 +332,9 @@ orders, dynamic fees, fee collection mode and fresh initialized bin arrays.
 `feeMint` is the actual fee token. The eight-array bound rejects trades it cannot
 fully quote. Sign and broadcast separately using the existing browser flow.
 USDC-paired pools such as FRONTIER are outside this method's current scope.
+
+For a partner's existing SOL-quoted Meteora DBC config, read
+`client.solana.meteora.dbc.getConfig({ config, network })` to preview fees,
+migration and the config hash. Pass `platform: 'meteora'`, the same `config`
+and optional `expectedConfigHash` to `client.solana.createToken`. A positive
+`amount` adds a slippage-protected first buy to the same transaction.

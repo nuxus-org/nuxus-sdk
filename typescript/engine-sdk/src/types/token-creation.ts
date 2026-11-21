@@ -85,10 +85,9 @@ export type CreateTokenMetadata = {
     ))
 );
 
-export interface CreateTokenOptions {
+interface CommonCreateOptions {
   network?: string;
   creator: string;
-  platform: 'pump' | 'bonk' | 'stonk';
   /** Creator buy in native SOL; omitted/0 creates without buying. */
   amount?: SolAmount;
   /** Inline fields are published through the engine's private API connection.
@@ -96,9 +95,9 @@ export interface CreateTokenOptions {
    * An existing published HTTPS uri is also supported. */
   metadata: CreateTokenMetadata;
   pump?: PumpCreateSettings;
-  /** Bonk Classic and Stonk Standard currently accept only the WSOL mint. */
+  /** Standard LaunchLab launches currently accept only the WSOL mint. */
   quoteMint?: string;
-  /** Slippage for a SOL -> quote-token bridge; default 100 bps. */
+  /** Slippage in basis points for the initial DBC buy or Pump quote bridge. */
   slippageBps?: number;
   fees?: { bribe?: SolAmount; priority?: SolAmount };
   bundles?: null | [];
@@ -106,21 +105,56 @@ export interface CreateTokenOptions {
   mint?: string;
 }
 
-/** Direct Pump entry point; platform selection is unnecessary. */
-export type PumpCreateTokenOptions = Omit<
-  CreateTokenOptions,
-  'platform' | 'quoteMint'
->;
-
-export type LaunchlabCreateTokenOptions = Omit<
-  CreateTokenOptions,
-  'platform' | 'pump'
+export type MeteoraDbcCreateOptions = Omit<
+  CommonCreateOptions,
+  'pump' | 'quoteMint'
 > & {
-  platform: 'bonk' | 'stonk';
+  /** Existing PoolConfig on the selected Solana network. */
+  config: string;
+  expectedConfigHash?: string;
+};
+export type CreateTokenOptions =
+  | (CommonCreateOptions & { platform: 'pump' | 'bonk' | 'stonk' | 'raydium' })
+  | (MeteoraDbcCreateOptions & { platform: 'meteora' })
+  | (Omit<CommonCreateOptions, 'pump' | 'quoteMint'> & {
+      platform: 'otc';
+      otc: { rewardMint: string; rewardSymbol: string };
+    })
+  | (Omit<CommonCreateOptions, 'pump' | 'quoteMint' | 'metadata'> & {
+      platform: 'paid';
+      metadata: Exclude<CreateTokenMetadata, { uri: string }>;
+      paid: { recipient: string };
+    });
+
+export type PumpCreateTokenOptions = Omit<CommonCreateOptions, 'quoteMint'>;
+export type LaunchlabCreateTokenOptions = Omit<CommonCreateOptions, 'pump'> & {
+  platform: 'bonk' | 'stonk' | 'raydium';
 };
 
+export interface MeteoraDbcLaunchConfig {
+  configHash: string;
+  config: string;
+  quoteMint: string;
+  tokenProgram: string;
+  decimals: number;
+  poolCreationFeeLamports: string;
+  initialBaseFeeNumerator: string;
+  feeDenominator: number;
+  dynamicFee: boolean;
+  feeClaimer: string;
+  transferFeeBps: number;
+  creatorTradingFeePercent: number;
+  migration: 'damm-v2';
+  migrationFeePercent: number;
+  creatorMigrationFeeSharePercent: number;
+  migrationQuoteThreshold: string;
+}
+
 export interface CreateTokenResult extends TransactionBuildResult {
-  platform: 'pump' | 'bonk' | 'stonk';
+  platform: CreateTokenOptions['platform'];
+  paid?: { recipient: string };
+  otc?: { rewardMint: string; rewardSymbol: string };
+  meteora?: MeteoraDbcLaunchConfig & { pool: string };
   mint: string;
   metadataUri: string;
   launchlab?: {
@@ -146,7 +180,7 @@ export interface CreateTokenResult extends TransactionBuildResult {
     platformFee?: PlatformFee;
     asset: 'solana:native';
     input: { baseUnits: string; decimals: 9 };
-    expectedOutput: { baseUnits: string; decimals: 6 };
-    minimumOutput: { baseUnits: string; decimals: 6 };
+    expectedOutput: { baseUnits: string; decimals: number };
+    minimumOutput: { baseUnits: string; decimals: number };
   };
 }

@@ -296,7 +296,7 @@ for (const method of ['solana.createToken', 'solana.pump.createToken']) {
   });
 }
 
-for (const platform of ['bonk', 'stonk']) {
+for (const platform of ['bonk', 'stonk', 'raydium']) {
   for (const direct of [false, true]) {
     test(`${platform} standard create uses the ${direct ? 'LaunchLab' : 'generic'} builder without altering metadata or broadcasting`, async (t) => {
       const state = setup(t);
@@ -405,4 +405,42 @@ test('Pump extension methods preserve configuration and keep offchain registrati
     socket.sent.some((r) => r.method === 'solana.broadcastTransaction'),
     false,
   );
+});
+
+test('DBC reads the selected config and passes it unchanged through both create entry points', async (t) => {
+  const state = setup(t);
+  const socket = await connected(state);
+  const options = { network: 'solana:devnet', config: 'partner-config' };
+  const query = state.client.solana.meteora.dbc.getConfig(options);
+  await until(() => socket.sent.length === 1);
+  assert.equal(socket.sent[0].method, 'solana.meteora.dbc.getConfig');
+  assert.deepEqual(socket.sent[0].params, options);
+  socket.reply(socket.sent[0], { configHash: 'reviewed' });
+  const { configHash } = await query;
+  for (const direct of [true, false]) {
+    const args = {
+      ...options,
+      creator: 'creator',
+      metadata: {
+        name: 'Token',
+        symbol: 'T',
+        uri: 'https://example.org/t.json',
+      },
+      expectedConfigHash: configHash,
+      ...(direct ? {} : { platform: 'meteora' }),
+    };
+    const create = direct
+      ? state.client.solana.meteora.dbc.createToken
+      : state.client.solana.createToken;
+    const pending = create(args);
+    await until(() => socket.sent.length === (direct ? 2 : 3));
+    const request = socket.sent.at(-1);
+    assert.equal(
+      request.method,
+      direct ? 'solana.meteora.dbc.createToken' : 'solana.createToken',
+    );
+    assert.deepEqual(request.params, args);
+    socket.reply(request, { platform: 'meteora' });
+    assert.equal((await pending).platform, 'meteora');
+  }
 });

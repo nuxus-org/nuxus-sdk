@@ -9,6 +9,8 @@ import type {
   CreateTokenAccountOptions,
   CreateTokenOptions,
   LaunchlabCreateTokenOptions,
+  MeteoraDbcLaunchConfig,
+  MeteoraDbcCreateOptions,
   PumpCreateTokenOptions,
   PumpLaunchOptions,
   CreateOffchainTokenOptions,
@@ -93,6 +95,13 @@ export interface SolanaApi {
       ) => Promise<MeteoraDammV2SwapBuildResult>;
     };
     dbc: {
+      getConfig: (options: {
+        config: string;
+        network?: string;
+      }) => Promise<MeteoraDbcLaunchConfig>;
+      createToken: (
+        options: MeteoraDbcCreateOptions,
+      ) => Promise<CreateTokenResult>;
       swap: (
         options: MeteoraDbcSwapOptions,
       ) => Promise<MeteoraDbcSwapBuildResult>;
@@ -239,6 +248,16 @@ export function createSolanaApi({
           }),
       },
       dbc: {
+        getConfig: (options) =>
+          request({
+            method: 'solana.meteora.dbc.getConfig',
+            params: { ...options },
+          }),
+        createToken: (options) =>
+          requestCreation<CreateTokenResult>(
+            'solana.meteora.dbc.createToken',
+            options,
+          ),
         swap: (
           options: MeteoraDbcSwapOptions,
         ): Promise<MeteoraDbcSwapBuildResult> =>
