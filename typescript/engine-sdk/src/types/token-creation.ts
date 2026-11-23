@@ -103,6 +103,8 @@ interface CommonCreateOptions {
   bundles?: null | [];
   /** Optional base58 64-byte mint keypair. Never pass a wallet private key. */
   mint?: string;
+  /** Public address of a client-side mint signer. Mutually exclusive with mint. */
+  mintAddress?: string;
 }
 
 export type MeteoraDbcCreateOptions = Omit<
